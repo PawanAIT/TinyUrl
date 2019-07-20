@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -54,6 +55,11 @@ namespace TinyUrl.Controllers
                 }
                 return database.PutLongUrl(Shorturl: guid, Longurl: LongUrl);
             }
+        }
+        [HttpGet]
+        public IEnumerable<string> Show()
+        {
+            return new string[] { "Pawan", "Kumar" };
         }
     }
 }
