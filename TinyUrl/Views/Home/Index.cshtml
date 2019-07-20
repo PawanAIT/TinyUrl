@@ -1,0 +1,37 @@
+﻿<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link href="~/Content/styles.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+    function show_alert() {
+        $.ajax({
+            url: "/api/values",
+            method: 'POST',
+            data: {
+                LongUrl: $('#login').val(),
+                CustomValue: $('#password').val()
+            },
+            success: function (data, textstatus, xhr) {
+                let copyFrom = document.createElement("textarea");
+                document.body.appendChild(copyFrom);
+                copyFrom.textContent = "https://ait-oss.azurewebsites.net/" + data;
+                copyFrom.select();
+                document.execCommand("copy");
+                alert("short URL copied\nhttps://ait-oss.azurewebsites.net/" + data);
+            }
+        });
+    }
+</script>
+
+<div class="wrapper fadeInDown">
+    <div id="formContent">
+        <div class="fadeIn first">
+            <img src="~/Models/faviconoss.PNG" id="icon" alt="User Icon" />
+        </div>
+        <form id="myForm">
+            <input type="text" id="login" class="fadeIn second" name="login" placeholder="Url to be shortened" required>
+            <input type="text" id="password" class="fadeIn third" name="login" placeholder="Custom value">
+            <input type="button" id="submitit" class="fadeIn fourth" value="Make it short Nigga!" onclick="show_alert();">
+        </form>
+    </div>
+</div>
