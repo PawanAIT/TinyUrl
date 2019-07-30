@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Results;
 using System.Web.Routing;
 using Database;
 using TinyUrl.Models;
@@ -34,7 +28,7 @@ namespace TinyUrl.Controllers
             string longUrl;
             try
             {
-                longUrl = database.GetLongUrl(shortUrl);
+                longUrl = await database.GetLongUrlAsync(shortUrl);
             }
             catch (InvalidOperationException)
             {
@@ -47,35 +41,33 @@ namespace TinyUrl.Controllers
         }
 
         // POST api/values
-        public string Post(URL uRL)
+        public async Task<string> Post(URL uRL)
         {
             string LongUrl = uRL.LongUrl, CustomValue = uRL.CustomValue;
             Database.Database database = new Database.Database();
             if (!String.IsNullOrEmpty(CustomValue))
             {
-                if (database.GetLongUrl(CustomValue) != "")
+                try
                 {
-                    return "Custom URL Already taken !";
+                   await database.GetLongUrlAsync(CustomValue).ConfigureAwait(false);
+                   return "Custom url already taken.";
                 }
-                else
+                catch (InvalidOperationException) 
                 {
-                    return database.PutLongUrl(Shorturl: CustomValue, Longurl: LongUrl);
+                    return await database.PutLongUrl(Shorturl: CustomValue, Longurl: LongUrl);
                 }
             }
             else
             {
-                string guid = Guid.NewGuid().ToString().Substring(0, 8);
-                while (database.GetLongUrl(guid) != "")
+                string guid;
+                do
                 {
                     guid = Guid.NewGuid().ToString().Substring(0, 8);
-                }
-                return database.PutLongUrl(Shorturl: guid, Longurl: LongUrl);
+                } while (await database.DoesShortUrlExistAsync(guid).ConfigureAwait(false));
+
+                return await database.PutLongUrl(Shorturl: guid, Longurl: LongUrl);
             }
         }
-        [HttpGet]
-        public IEnumerable<string> Show()
-        {
-            return new string[] { "Pawan", "Kumar", "vishwakarma" };
-        }
+       
     }
 }

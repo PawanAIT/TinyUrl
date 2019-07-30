@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Database
@@ -6,7 +7,7 @@ namespace Database
     public class LRUCache<K, V>
     {
         private readonly int _capacity;
-        private readonly Dictionary<K, LinkedListNode<LRUCacheItem<K, V>>> _cacheMap = new Dictionary<K, LinkedListNode<LRUCacheItem<K, V>>>();
+        private readonly IDictionary<K, LinkedListNode<LRUCacheItem<K, V>>> _cacheMap = new ConcurrentDictionary<K, LinkedListNode<LRUCacheItem<K, V>>>();
         private readonly LinkedList<LRUCacheItem<K, V>> _lruList = new LinkedList<LRUCacheItem<K, V>>();
 
         public LRUCache(int capacity)
@@ -14,7 +15,6 @@ namespace Database
             _capacity = capacity;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public V Get(K key)
         {
             LinkedListNode<LRUCacheItem<K, V>> node;
@@ -27,8 +27,7 @@ namespace Database
             }
             return default(V);
         }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
+        
         public void Add(K key, V val)
         {
             if (_cacheMap.Count >= _capacity)

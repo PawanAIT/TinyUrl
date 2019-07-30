@@ -21,7 +21,7 @@ namespace Database
             }
         }
 
-        public string GetLongUrl(string Shorturl)
+        public async Task<string> GetLongUrlAsync(string Shorturl)
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -30,7 +30,7 @@ namespace Database
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, conn))
                 {
                     cmd.Parameters.AddWithValue("@Shorturl", Shorturl);
-                    using (SqlDataReader oReader = cmd.ExecuteReader())
+                    using (SqlDataReader oReader = await cmd.ExecuteReaderAsync().ConfigureAwait(false))
                     {
                         while (oReader.Read())
                         {
@@ -43,7 +43,7 @@ namespace Database
 
             throw new InvalidOperationException();
         }
-        public string PutLongUrl(string Shorturl ,string Longurl)
+        public async Task<string> PutLongUrl(string Shorturl ,string Longurl)
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -53,11 +53,24 @@ namespace Database
                 {
                     cmd.Parameters.AddWithValue("@Shorturl", Shorturl);
                     cmd.Parameters.AddWithValue("@Longurl", Longurl);
-                    cmd.ExecuteReader();
+                    await cmd.ExecuteReaderAsync().ConfigureAwait(false);
                 }
                 conn.Close();
             }
             return Shorturl;
+        }
+
+        public async Task<bool> DoesShortUrlExistAsync(string guid)
+        {
+            try
+            {
+                await GetLongUrlAsync(guid).ConfigureAwait(false);
+                return true;
+            }
+            catch(InvalidOperationException)
+            {
+                return false;
+            }
         }
     }
 }
