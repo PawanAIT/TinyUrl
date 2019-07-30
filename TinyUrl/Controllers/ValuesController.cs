@@ -16,24 +16,40 @@ namespace TinyUrl.Controllers
 
     public class ValuesController : ApiController
     {
+        static LRUCache<string, string> lruCache { get; } = new LRUCache<string, string>(1000);
+
         [Route("{shortUrl}")]
         public async Task<IHttpActionResult> Get(string shortUrl)
         {
-            Database.Database database = new Database.Database();
-            string LongUrl = database.GetLongUrl(shortUrl);
-           
-            if (LongUrl == "")
+            string CachedLongurl = lruCache.Get(shortUrl);
+
+            if (!string.IsNullOrEmpty(CachedLongurl))
             {
-                return Redirect("Https://localhost/views/home/error.html");
+                return Redirect(new System.Uri(CachedLongurl));
             }
-            System.Uri uri = new System.Uri(LongUrl);
-           return Redirect(uri);
+
+            // if not found in cache
+            var database = new Database.Database();
+
+            string longUrl;
+            try
+            {
+                longUrl = database.GetLongUrl(shortUrl);
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+
+            lruCache.Add(shortUrl, longUrl);
+
+            return Redirect(new System.Uri(longUrl));
         }
 
         // POST api/values
         public string Post(URL uRL)
         {
-            string LongUrl= uRL.LongUrl, CustomValue=uRL.CustomValue;
+            string LongUrl = uRL.LongUrl, CustomValue = uRL.CustomValue;
             Database.Database database = new Database.Database();
             if (!String.IsNullOrEmpty(CustomValue))
             {
@@ -48,8 +64,8 @@ namespace TinyUrl.Controllers
             }
             else
             {
-                string guid = Guid.NewGuid().ToString().Substring(0,8);
-                while(database.GetLongUrl(guid) != "")
+                string guid = Guid.NewGuid().ToString().Substring(0, 8);
+                while (database.GetLongUrl(guid) != "")
                 {
                     guid = Guid.NewGuid().ToString().Substring(0, 8);
                 }

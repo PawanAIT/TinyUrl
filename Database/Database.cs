@@ -20,10 +20,9 @@ namespace Database
                 return keyVaultClient.GetSecretAsync("https://keyvaultsecrets.vault.azure.net/secrets/TinyUrlDatabseConnString/1206aa647dab4cf1a5e1f74761f48bfd").GetAwaiter().GetResult().Value;
             }
         }
+
         public string GetLongUrl(string Shorturl)
         {
-           
-            string longUrl = "";
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 conn.Open();
@@ -35,13 +34,14 @@ namespace Database
                     {
                         while (oReader.Read())
                         {
-                            longUrl = oReader["Longurl"].ToString();
+                            return oReader["Longurl"].ToString();
                         }
                     }
                 }
                 conn.Close();
             }
-            return longUrl;
+
+            throw new InvalidOperationException();
         }
         public string PutLongUrl(string Shorturl ,string Longurl)
         {
