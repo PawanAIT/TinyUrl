@@ -7,10 +7,10 @@ using TinyUrl.Models;
 
 namespace TinyUrl.Controllers
 {
-
-    public class ValuesController : ApiController
+    public class TinyUrlController : ApiController
     {
         static LRUCache<string, string> lruCache { get; } = new LRUCache<string, string>(1000);
+        Database.Database database = new Database.Database();
 
         [Route("{shortUrl}")]
         public async Task<IHttpActionResult> Get(string shortUrl)
@@ -21,9 +21,6 @@ namespace TinyUrl.Controllers
             {
                 return Redirect(new System.Uri(CachedLongurl));
             }
-
-            // if not found in cache
-            var database = new Database.Database();
 
             string longUrl;
             try
@@ -44,7 +41,7 @@ namespace TinyUrl.Controllers
         public async Task<string> Post(URL uRL)
         {
             string LongUrl = uRL.LongUrl, CustomValue = uRL.CustomValue;
-            Database.Database database = new Database.Database();
+           
             if (!String.IsNullOrEmpty(CustomValue))
             {
                 try
@@ -68,6 +65,11 @@ namespace TinyUrl.Controllers
                 return await database.PutLongUrl(Shorturl: guid, Longurl: LongUrl);
             }
         }
-       
+        [HttpPut]
+        [Route("api/tinyurl/{shortUrl}/{longUrl}")]
+        public async Task Put(string shortUrl, string longUrl)
+        {
+            await database.UpdateShortUrl(shortUrl, longUrl);
+        }
     }
 }

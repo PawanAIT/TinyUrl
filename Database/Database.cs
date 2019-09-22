@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,13 +12,18 @@ namespace Database
 {
     public class Database
     {
+        string _connString = null;
         string connString
         {
             get
             {
+                if(_connString != null)
+                {
+                    return _connString;
+                }
                 AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
                 var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-                return keyVaultClient.GetSecretAsync("https://keyvaultsecrets.vault.azure.net/secrets/TinyUrlDatabseConnString/1206aa647dab4cf1a5e1f74761f48bfd").GetAwaiter().GetResult().Value;
+                return _connString = keyVaultClient.GetSecretAsync("https://keyvaultsecrets.vault.azure.net/secrets/TinyUrlDatabseConnString/1206aa647dab4cf1a5e1f74761f48bfd").GetAwaiter().GetResult().Value;
             }
         }
 
@@ -70,6 +76,22 @@ namespace Database
             catch(InvalidOperationException)
             {
                 return false;
+            }
+        }
+
+        public async Task UpdateShortUrl(string shortUrl ,string longUrl)
+        {
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                string sqlQuery = $"UPDATE [dbo].[UrlMapping] SET [Longurl] = @Longurl WHERE  [Shorturl] = @Shorturl;";
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Shorturl", shortUrl);
+                    cmd.Parameters.AddWithValue("@Longurl", longUrl);
+                    await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                }
+                conn.Close();
             }
         }
     }
